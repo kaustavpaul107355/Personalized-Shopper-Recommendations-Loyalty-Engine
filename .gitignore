@@ -1,0 +1,32 @@
+# Credentials
+.env
+.env.local
+.env.*.local
+
+# Databricks
+.databricks/
+.databrickscfg
+databricks-connect.log
+
+# Python
+__pycache__/
+*.py[cod]
+*.pyo
+.venv/
+venv/
+*.egg-info/
+.eggs/
+
+# Generated data (regenerate via scripts/generate_mock_data.py)
+data/raw/*.csv
+data/raw/*.jsonl
+
+# IDE
+.idea/
+.vscode/
+*.swp
+*.swo
+.DS_Store
+
+# Logs
+*.log

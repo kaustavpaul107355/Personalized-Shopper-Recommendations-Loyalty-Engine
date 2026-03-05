@@ -1,0 +1,14 @@
+# TKO Bootstrap Job — Validates bundle deployment
+resources:
+  jobs:
+    tko_bootstrap:
+      name: "[dev] TKO Loyalty - Bootstrap"
+      description: Validates workspace connectivity after bundle deploy
+      tasks:
+        - task_key: bootstrap
+          notebook_task:
+            notebook_path: ../../src/notebooks/tko_bootstrap.py
+          new_cluster:
+            spark_version: "13.3.x-scala2.12"
+            node_type_id: i3.xlarge
+            num_workers: 1

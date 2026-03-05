@@ -1,0 +1,37 @@
+# TKO Loyalty — Unified Lakeflow Orchestration Job
+# Chains DLT pipeline (data refresh) → Vector Search setup (agent infra)
+resources:
+  jobs:
+    tko_lakeflow_orchestration:
+      name: "[dev] TKO Loyalty - Lakeflow Orchestration"
+      description: >
+        End-to-end data pipeline: runs DLT (Bronze → Silver → Gold),
+        then provisions Vector Search endpoint and delta-sync index.
+      tasks:
+        # Task 1: DLT Pipeline (serverless, medallion architecture)
+        - task_key: run_dlt_pipeline
+          description: "Ingest raw data and build Bronze → Silver → Gold tables"
+          pipeline_task:
+            pipeline_id: ${resources.pipelines.tko_dlt_pipeline.id}
+            full_refresh: false
+
+        # Task 2: Vector Search Setup (depends on DLT completing)
+        - task_key: setup_vector_search
+          description: "Load customer profiles, create product catalog, provision VS endpoint + index"
+          depends_on:
+            - task_key: run_dlt_pipeline
+          notebook_task:
+            notebook_path: ../../src/notebooks/tko_setup_vector_search.py
+          libraries:
+            - pypi:
+                package: databricks-vectorsearch
+          new_cluster:
+            spark_version: "15.4.x-scala2.12"
+            node_type_id: i3.xlarge
+            num_workers: 0
+            data_security_mode: SINGLE_USER
+            spark_conf:
+              spark.master: "local[*]"
+              spark.databricks.cluster.profile: singleNode
+            custom_tags:
+              ResourceClass: SingleNode

@@ -1,0 +1,38 @@
+# Databricks Asset Bundle — TKO Hyper-Personalized Loyalty App
+# Deploy: ./deploy.sh or databricks bundle deploy -t dev
+#
+# Before deploying: update workspace.host and variables (catalog_name, schema_name)
+# to match your Unity Catalog setup. See docs/SETUP.md.
+# =============================================================================
+
+bundle:
+  name: tko-loyalty-app
+
+variables:
+  catalog_name:
+    description: Unity Catalog for retail data
+    default: classic_stable_1zia5t_kp_catalog
+  schema_name:
+    description: Schema for loyalty app tables
+    default: tko-project
+  volume_name:
+    description: Volume for raw mock data
+    default: raw_data
+
+workspace:
+  host: https://fevm-classic-stable-1zia5t-kp.cloud.databricks.com
+
+targets:
+  dev:
+    mode: development
+    default: true
+    variables:
+      catalog_name: classic_stable_1zia5t_kp_catalog
+      schema_name: tko-project
+      volume_name: raw_data
+    workspace:
+      root_path: /Users/${workspace.current_user.userName}/.bundle/${bundle.name}/dev
+
+include:
+  - resources/jobs/*.yml
+  - resources/pipelines/*.yml

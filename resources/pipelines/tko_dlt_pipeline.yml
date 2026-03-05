@@ -1,0 +1,16 @@
+# TKO Loyalty — Lakeflow Spark Declarative Pipeline
+# Bronze → Silver → Gold medallion for clickstream + products
+resources:
+  pipelines:
+    tko_dlt_pipeline:
+      name: "[dev] TKO Loyalty - DLT Pipeline"
+      catalog: ${var.catalog_name}
+      target: ${var.schema_name}
+      serverless: true
+      development: true
+      channel: "CURRENT"
+      configuration:
+        tko.volume_path: "/Volumes/${var.catalog_name}/${var.schema_name}/${var.volume_name}"
+      libraries:
+        - notebook:
+            path: ../../src/notebooks/tko_dlt_pipeline.py
