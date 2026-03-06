@@ -154,17 +154,23 @@ except Exception as e:
     else:
         raise
 
-# Poll until ready
+# Poll until ready (graceful — transient 503s from VS control plane are common)
+index_ready = False
 for i in range(90):
-    idx_status = index.describe()
-    state = idx_status.get("status", {}).get("detailed_state", "UNKNOWN")
-    ready = idx_status.get("status", {}).get("ready", False)
-    print(f"  [{i * 10}s] Index state: {state} | ready: {ready}")
-    if ready:
-        break
+    try:
+        idx_status = index.describe()
+        state = idx_status.get("status", {}).get("detailed_state", "UNKNOWN")
+        ready = idx_status.get("status", {}).get("ready", False)
+        print(f"  [{i * 10}s] Index state: {state} | ready: {ready}")
+        if ready:
+            index_ready = True
+            break
+    except Exception as e:
+        print(f"  [{i * 10}s] Polling error (will retry): {e}")
     time.sleep(10)
-else:
-    print("WARNING: Index not ready within 15 minutes.")
+
+if not index_ready:
+    print("WARNING: Index not confirmed ready within 15 minutes. It may still be provisioning.")
 
 # COMMAND ----------
 # MAGIC %md
@@ -174,14 +180,18 @@ else:
 
 index = vsc.get_index(endpoint_name=VS_ENDPOINT_NAME, index_name=VS_INDEX_NAME)
 
-results = index.similarity_search(
-    query_text="casual denim jeans",
-    columns=["product_id", "product_name", "category", "subcategory", "brand", "price"],
-    num_results=5,
-)
+try:
+    results = index.similarity_search(
+        query_text="casual denim jeans",
+        columns=["product_id", "product_name", "category", "subcategory", "brand", "price"],
+        num_results=5,
+    )
 
-print("Top 5 results for 'casual denim jeans':")
-for row in results.get("result", {}).get("data_array", []):
-    print(f"  {row}")
+    print("Top 5 results for 'casual denim jeans':")
+    for row in results.get("result", {}).get("data_array", []):
+        print(f"  {row}")
+except Exception as e:
+    print(f"Smoke test skipped — index may still be syncing: {e}")
+    print("Re-run the smoke test manually once the index status shows 'ready'.")
 
 # COMMAND ----------
